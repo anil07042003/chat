@@ -1,0 +1,112 @@
+.message-bar {
+  padding: 1rem;
+  height: 10%;
+  /* height: 80px; */
+  max-height: 80px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.message-bar .message-bar-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.message-bar .emoji-picker-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.message-bar .message-bar-icon:hover {
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: #415763;
+}
+
+.message-bar .message-bar-searchbar {
+  width: 85%;
+}
+
+.message-bar .message-bar-search-input {
+  /* background-color: #415763; */
+  background-color: #2a3942;
+  height: 2.5rem;
+  text-indent: 1rem;
+  border-radius: 10px;
+  color: #d1d7db;
+  width: 100%;
+  border: none;
+  outline: none;
+}
+
+.message-bar .message-bar-search-input:focus {
+  border: none;
+  outline: none;
+}
+
+.message-bar .message-bar-icon {
+  position: relative;
+}
+
+.message-bar button.message-bar-icon {
+  background-color: transparent;
+  border: none;
+  color: #e9edef;
+}
+
+.message-bar .emoji-icon-container {
+  position: relative;
+}
+
+.message-bar .emoji-picker-icon {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.message-bar .emoji-picker-icon:hover {
+  transform: scale(1.1);
+}
+
+.message-bar .emoji-picker {
+  position: absolute;
+  bottom: 4rem;
+  left: 0;
+  z-index: 1000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.message-bar .emoji-picker > div > div {
+  background-color: #2a3942 !important;
+}
+
+.message-bar .emoji-picker .epr-tab-container {
+  background-color: #2a3942 !important;
+}
+
+.message-bar .emoji-picker .epr-search-container {
+  background-color: #2a3942 !important;
+  padding: 8px;
+}
+
+.message-bar .emoji-picker .epr-search {
+  background-color: #415763 !important;
+  border: 1px solid #556b7f !important;
+  color: #d1d7db !important;
+}
+
+.message-bar .emoji-picker .epr-emoji {
+  padding: 8px;
+}
+
+.message-bar .attachment-hidden-input {
+  display: none;
+}
