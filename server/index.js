@@ -31,6 +31,9 @@ uploadDirs.forEach((dir) => {
 });
 
 const app = express();
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 const port = process.env.PORT || 3001;
 
 // ─── CORS ──────────────────────────────────────────────────────────────────
