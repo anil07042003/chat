@@ -16,6 +16,7 @@ import {
   BLOCK_CHAT_ROUTE,
   CLEAR_CHAT_ROUTE,
   DELETE_CHAT_ROUTE,
+  HOST,
   INITIATE_CALL_ROUTE,
   MUTE_CHAT_ROUTE,
 } from "../../utils/constants";
@@ -211,7 +212,7 @@ const ChatHeader = ({ onBack, onChatCleared }) => {
             }`}>
               {selectedChatData?.image ? (
                 <img
-                  src={`${import.meta.env.VITE_SERVER_URL}/${selectedChatData.image}`}
+                  src={`${HOST}/${selectedChatData.image}`}
                   alt={selectedChatData.name}
                   className="w-full h-full object-cover rounded-full"
                 />

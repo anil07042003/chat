@@ -1,14 +1,15 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
+const PRODUCTION_SERVER_URL = "https://baatchit-backend-3716.onrender.com";
+
 export default defineConfig(({ mode }) => {
   // Load env so we can read VITE_SERVER_URL at config time
   const env = loadEnv(mode, process.cwd(), "");
 
-  // The backend URL — defaults to localhost:3001 for local dev.
-  // Override with VITE_SERVER_URL in .env when using a network IP or
-  // VS Code forwarded port (e.g. VITE_SERVER_URL=http://192.168.1.5:3001)
-  const backendUrl = env.VITE_SERVER_URL || "http://localhost:3001";
+  // Backend URL used by the Vite dev proxy.
+  // Keep this aligned with client/src/utils/constants.js for deployed builds.
+  const backendUrl = (env.VITE_SERVER_URL || PRODUCTION_SERVER_URL).replace(/\/+$/, "");
 
   return {
     plugins: [react()],

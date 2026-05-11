@@ -9,8 +9,7 @@ const SocketContext = createContext(null);
 export const useSocket = () => useContext(SocketContext);
 
 // Determine the Socket.IO connection URL.
-// When HOST is "" (proxy mode), connect to "/" so the Vite proxy forwards
-// /socket.io/* to the backend. When HOST is an explicit URL, connect directly.
+// HOST points to the deployed Render backend unless VITE_SERVER_URL overrides it.
 const getSocketUrl = () => HOST || "/";
 
 export const SocketProvider = ({ children }) => {

@@ -1,9 +1,8 @@
 import axios from "axios";
 import { HOST } from "../utils/constants";
 
-// When HOST is "/" (proxy mode) or an absolute URL, axios handles both correctly.
-// baseURL "/" means all requests go to the same origin and the Vite proxy
-// forwards /api/* to the backend.
+// HOST points to the deployed Render backend unless VITE_SERVER_URL overrides it.
+// Credentials stay enabled so auth cookies/sessions continue to flow cross-origin.
 export const apiClient = axios.create({
   baseURL: HOST,
   withCredentials: true,

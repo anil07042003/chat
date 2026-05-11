@@ -5,6 +5,7 @@ import {
   GET_DM_CONTACTS_ROUTE,
   GET_USER_GROUPS_ROUTE,
   GET_FRIEND_REQUESTS_ROUTE,
+  HOST,
 } from "../../utils/constants";
 import Avatar from "../ui/Avatar";
 import Spinner from "../ui/Spinner";
@@ -317,7 +318,7 @@ const ChatListItem = ({ item, type, isActive, unreadCount, onClick }) => {
             ]
           }`}>
             {item.image ? (
-              <img src={`${import.meta.env.VITE_SERVER_URL}/${item.image}`} alt={item.name} className="w-full h-full object-cover rounded-full" />
+              <img src={`${HOST}/${item.image}`} alt={item.name} className="w-full h-full object-cover rounded-full" />
             ) : (
               item.name?.[0]?.toUpperCase()
             )}

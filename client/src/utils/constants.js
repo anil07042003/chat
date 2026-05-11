@@ -1,30 +1,17 @@
-// ─── Backend URL ─────────────────────────────────────────────────────────────
-// The strategy:
-//   - In dev (Vite), ALL requests go through the Vite proxy at "/" by default.
-//     The proxy forwards /api/* and /socket.io/* to the backend on port 3001.
-//     This works for localhost, network IPs, and VS Code forwarded ports.
-//   - Set VITE_SERVER_URL only if you need to bypass the proxy and connect
-//     directly to the backend (e.g. a remote server, different machine).
-//
-// Examples:
-//   VITE_SERVER_URL=                          → use Vite proxy (default, recommended)
-//   VITE_SERVER_URL=http://localhost:3001      → direct connection, localhost only
-//   VITE_SERVER_URL=http://192.168.1.5:3001   → direct connection, network IP
-//   VITE_SERVER_URL=https://xxxx-3001.app.github.dev → VS Code forwarded backend
+// Backend URL for API requests, uploads, and Socket.IO.
+// Vercel serves the frontend over HTTPS, so the browser must connect directly
+// to the HTTPS Render backend to avoid mixed-content and websocket issues.
+export const PRODUCTION_SERVER_URL = "https://baatchit-backend-3716.onrender.com";
 
 const getBackendUrl = () => {
   const explicit = import.meta.env.VITE_SERVER_URL;
 
-  // If explicitly set to a non-empty value, use it directly
+  // If explicitly set to a non-empty value, use it directly.
   if (explicit && explicit.trim() !== "") {
-    return explicit.trim();
+    return explicit.trim().replace(/\/+$/, "");
   }
 
-  // Default: use the Vite proxy (same origin).
-  // The proxy config in vite.config.js forwards /api and /socket.io to the backend.
-  // This works for localhost, network IPs, and VS Code forwarded ports without
-  // any configuration — the proxy target is set in vite.config.js.
-  return "";
+  return PRODUCTION_SERVER_URL;
 };
 
 export const HOST = getBackendUrl();
