@@ -42,6 +42,9 @@ const allowedOrigins = process.env.ORIGIN
   : ["http://localhost:3000", "http://localhost:5173"];
 
 const isDev = process.env.NODE_ENV !== "production";
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 
 app.use(
   cors({
