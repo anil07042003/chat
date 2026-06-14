@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
-const PRODUCTION_SERVER_URL = "https://baatchit-backend-3716.onrender.com";
+const PRODUCTION_SERVER_URL = "https://chat-mz3s.onrender.com";
 
 export default defineConfig(({ mode }) => {
   // Load env so we can read VITE_SERVER_URL at config time

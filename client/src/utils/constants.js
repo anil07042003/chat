@@ -1,7 +1,7 @@
 // Backend URL for API requests, uploads, and Socket.IO.
 // Vercel serves the frontend over HTTPS, so the browser must connect directly
 // to the HTTPS Render backend to avoid mixed-content and websocket issues.
-export const PRODUCTION_SERVER_URL = "https://baatchit-backend-3716.onrender.com";
+export const PRODUCTION_SERVER_URL = "https://chat-mz3s.onrender.com";
 
 const getBackendUrl = () => {
   const explicit = import.meta.env.VITE_SERVER_URL;
