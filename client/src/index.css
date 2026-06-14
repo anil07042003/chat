@@ -1,0 +1,919 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes privacyFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CSS VARIABLES — set by JS via applyAppearance() in SettingsLayout.jsx
+═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --app-height:    100vh;
+  --mobile-nav-h:  0px;
+
+  /* Accent (default: violet) */
+  --accent-primary:     #7c3aed;
+  --accent-light:       #8b5cf6;
+  --accent-primary-rgb: 124, 58, 237;
+  --accent-light-rgb:   139, 92, 246;
+
+  /* Hover backgrounds — theme-aware, used by all hover overrides */
+  --bg-hover:       #27272a;   /* dark default  */
+  --bg-hover-deep:  #3f3f46;   /* darker hover  */
+  --bg-app:         #09090b;
+  --bg-shell:       #111113;
+  --bg-primary:     #18181b;
+  --bg-secondary:   #18181b;
+  --bg-panel:       #18181b;
+  --bg-card:        #1f1f23;
+  --bg-elevated:    #27272a;
+  --bg-input:       #18181c;
+  --border-color:   #2e2e35;
+  --text-primary:   #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted:     #71717a;
+
+  /* Chat */
+  --chat-font-size:       15px;
+  --chat-wallpaper-image: none;
+  --chat-wallpaper-bg:    transparent;
+  --chat-wallpaper-size:  auto;
+
+  /* Transitions */
+  --transition-duration: 200ms;
+  --animation-duration:  200ms;
+
+  /* Density */
+  --density-px:     1rem;
+  --density-py:     0.75rem;
+  --density-gap:    0.75rem;
+  --density-radius: 0.75rem;
+}
+
+/* ─── Density ────────────────────────────────────────────────────────────── */
+html[data-density="compact"]     { --density-px: 0.625rem; --density-py: 0.5rem; --density-gap: 0.5rem; --density-radius: 0.5rem; }
+html[data-density="comfortable"] { --density-px: 1.25rem;  --density-py: 1rem;   --density-gap: 1rem;   --density-radius: 1rem;   }
+
+/* ─── Animations off ─────────────────────────────────────────────────────── */
+html[data-animations="off"] *,
+html[data-animations="off"] *::before,
+html[data-animations="off"] *::after {
+  animation-duration:  0ms !important;
+  animation-delay:     0ms !important;
+  transition-duration: 0ms !important;
+  transition-delay:    0ms !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME VARIABLES
+   Both dark and light define --bg-hover so every hover override just uses
+   var(--bg-hover) — no per-theme duplication needed.
+═══════════════════════════════════════════════════════════════════════════ */
+html[data-theme="dark"], html:not([data-theme]) {
+  --bg-app:        #09090b;
+  --bg-shell:      #111113;
+  --bg-primary:    #18181b;
+  --bg-secondary:  #18181b;
+  --bg-panel:      #18181b;
+  --bg-card:       #1f1f23;
+  --bg-elevated:   #27272a;
+  --bg-input:      #18181c;
+  --bg-hover:      #27272a;   /* surface-800 */
+  --bg-hover-deep: #3f3f46;   /* surface-700 */
+  --border-color:  #3f3f46;
+  --text-primary:  #ffffff;
+  --text-secondary:#a1a1aa;
+  --text-muted:    #71717a;
+}
+
+html[data-theme="light"] {
+  --bg-app:        #f5f5f7;
+  --bg-shell:      #ffffff;
+  --bg-primary:    #ffffff;
+  --bg-secondary:  #f7f7fa;
+  --bg-panel:      #ffffff;
+  --bg-card:       #ffffff;
+  --bg-elevated:   #ededf2;
+  --bg-input:      #f8f8fb;
+  --bg-hover:      #e4e4e7;   /* light hover = elevated gray */
+  --bg-hover-deep: #d4d4d8;   /* deeper hover */
+  --border-color:  #d4d4d8;
+  --text-primary:  #09090b;
+  --text-secondary:#52525b;
+  --text-muted:    #71717a;
+}
+
+/* ─── Apply theme to surface classes ─────────────────────────────────────── */
+html[data-theme="light"] body                { background-color: var(--bg-app); color: var(--text-primary); }
+html[data-theme="light"] .bg-surface-950     { background-color: var(--bg-app)       !important; }
+html[data-theme="light"] .bg-surface-900     { background-color: var(--bg-primary)   !important; }
+html[data-theme="light"] .bg-surface-800     { background-color: var(--bg-secondary) !important; }
+html[data-theme="light"] .bg-surface-700     { background-color: var(--bg-elevated)  !important; }
+html[data-theme="light"] .bg-surface-600     { background-color: var(--bg-hover-deep)!important; }
+html[data-theme="light"] .border-surface-800 { border-color: var(--border-color)     !important; }
+html[data-theme="light"] .border-surface-700 { border-color: var(--border-color)     !important; }
+html[data-theme="light"] .text-white         { color: var(--text-primary)            !important; }
+html[data-theme="light"] .text-surface-300   { color: var(--text-secondary)          !important; }
+html[data-theme="light"] .text-surface-400   { color: var(--text-secondary)          !important; }
+html[data-theme="light"] .text-surface-500   { color: var(--text-muted)              !important; }
+html[data-theme="light"] .placeholder-surface-500::placeholder { color: var(--text-muted) !important; }
+html[data-theme="light"] .chat-bubble-received { background-color: var(--bg-elevated) !important; color: var(--text-primary) !important; }
+
+.app-bg { background-color: var(--bg-app) !important; color: var(--text-primary) !important; }
+.theme-shell { background-color: var(--bg-shell) !important; color: var(--text-primary) !important; }
+.theme-panel { background-color: var(--bg-panel) !important; color: var(--text-primary) !important; }
+.theme-card { background-color: var(--bg-card) !important; border-color: var(--border-color) !important; }
+.theme-elevated { background-color: var(--bg-elevated) !important; }
+.theme-input {
+  background-color: var(--bg-input) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+.theme-input::placeholder { color: var(--text-muted) !important; }
+.theme-border { border-color: var(--border-color) !important; }
+.theme-text { color: var(--text-primary) !important; }
+.theme-text-secondary { color: var(--text-secondary) !important; }
+.theme-text-muted { color: var(--text-muted) !important; }
+.bg-accent { background-color: var(--accent-primary) !important; }
+.bg-accent-soft { background-color: rgba(var(--accent-primary-rgb), 0.12) !important; }
+.hover\:bg-accent-soft:hover { background-color: rgba(var(--accent-primary-rgb), 0.12) !important; }
+.text-accent { color: var(--accent-primary) !important; }
+.border-accent { border-color: var(--accent-primary) !important; }
+.border-accent-soft { border-color: rgba(var(--accent-primary-rgb), 0.28) !important; }
+.hover\:border-accent:hover { border-color: var(--accent-primary) !important; }
+.ring-accent-soft { --tw-ring-color: rgba(var(--accent-primary-rgb), 0.28) !important; }
+.focus\:border-accent:focus { border-color: var(--accent-primary) !important; }
+
+html[data-theme="light"] .bg-\[\#111113\],
+html[data-theme="light"] .bg-\[\#18181c\],
+html[data-theme="light"] .bg-\[\#1f1f23\],
+html[data-theme="light"] .bg-black {
+  background-color: var(--bg-card) !important;
+}
+
+html[data-theme="light"] .border-\[\#2e2e35\],
+html[data-theme="light"] .border-\[\#2e2e35\]\/70,
+html[data-theme="light"] .border-\[\#2e2e35\]\/80 {
+  border-color: var(--border-color) !important;
+}
+
+html[data-theme="light"] .text-zinc-200,
+html[data-theme="light"] .text-zinc-300,
+html[data-theme="light"] .text-white {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="light"] .text-zinc-400,
+html[data-theme="light"] .text-zinc-500 {
+  color: var(--text-secondary) !important;
+}
+
+/* ─── Light theme: fix hover states that compile to dark hex values ───────── */
+/* These are the most common hover patterns used throughout the app */
+html[data-theme="light"] .hover\:bg-surface-800:hover,
+html[data-theme="light"] .hover\:bg-surface-700:hover,
+html[data-theme="light"] .active\:bg-surface-700:active {
+  background-color: var(--bg-hover) !important;
+}
+html[data-theme="light"] .hover\:bg-surface-600:hover {
+  background-color: var(--bg-hover-deep) !important;
+}
+/* Generic hover on any element that uses surface backgrounds */
+html[data-theme="light"] button:hover .bg-surface-800,
+html[data-theme="light"] a:hover .bg-surface-800 {
+  background-color: var(--bg-hover) !important;
+}
+/* Input / textarea backgrounds */
+html[data-theme="light"] input,
+html[data-theme="light"] textarea,
+html[data-theme="light"] select {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* ─── Light theme: hover text color fix ──────────────────────────────────── */
+/* hover:text-white is hardcoded white — wrong on light backgrounds */
+html[data-theme="light"] .hover\:text-white:hover {
+  color: var(--text-primary) !important;
+}
+
+/* ─── Light theme: chat input area — full override ───────────────────────── */
+/* Container bar */
+html[data-theme="light"] .chat-input-area,
+html[data-theme="light"] .chat-input-area > div {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* The outer wrapper div with bg-surface-900 border-t */
+html[data-theme="light"] .chat-input-area .bg-surface-900 {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Textarea inside the input area */
+html[data-theme="light"] .chat-input-area textarea,
+html[data-theme="light"] .msg-input {
+  background-color: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  caret-color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+html[data-theme="light"] .chat-input-area textarea::placeholder,
+html[data-theme="light"] .msg-input::placeholder {
+  color: var(--text-muted) !important;
+}
+html[data-theme="light"] .chat-input-area textarea:focus,
+html[data-theme="light"] .msg-input:focus {
+  border-color: var(--accent-primary) !important;
+  background-color: var(--bg-primary) !important;
+}
+
+/* Icon buttons in input area */
+html[data-theme="light"] .chat-input-area button {
+  color: var(--text-secondary) !important;
+}
+html[data-theme="light"] .chat-input-area button:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-hover) !important;
+}
+
+/* Send button — keep accent color */
+html[data-theme="light"] .chat-input-area button.bg-nexchat-600,
+html[data-theme="light"] .chat-input-area button[class*="bg-nexchat"] {
+  background-color: var(--accent-primary) !important;
+  color: #ffffff !important;
+}
+html[data-theme="light"] .chat-input-area button.bg-nexchat-600:hover,
+html[data-theme="light"] .chat-input-area button[class*="bg-nexchat"]:hover {
+  background-color: var(--accent-light) !important;
+  color: #ffffff !important;
+}
+
+/* Attach dropdown popup */
+html[data-theme="light"] .chat-input-area .bg-surface-800.border.border-surface-700 {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12) !important;
+}
+html[data-theme="light"] .chat-input-area label:hover {
+  background-color: var(--bg-hover) !important;
+}
+html[data-theme="light"] .chat-input-area label span {
+  color: var(--text-primary) !important;
+}
+
+/* Reply preview card */
+html[data-theme="light"] .chat-input-area .bg-surface-800.rounded-xl {
+  background-color: var(--bg-elevated) !important;
+  border-color: var(--accent-primary) !important;
+}
+html[data-theme="light"] .chat-input-area .text-surface-400 {
+  color: var(--text-muted) !important;
+}
+
+/* Upload progress track */
+html[data-theme="light"] .chat-input-area .bg-surface-700 {
+  background-color: var(--bg-elevated) !important;
+}
+
+/* Recording UI */
+html[data-theme="light"] .chat-input-area .bg-surface-800.text-rose-400 {
+  background-color: var(--bg-elevated) !important;
+}
+html[data-theme="light"] .chat-input-area .font-mono {
+  color: var(--text-primary) !important;
+}
+
+/* ─── Light theme: chat header ────────────────────────────────────────────── */
+html[data-theme="light"] .bg-surface-900.border-b {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* ─── Light theme: chat messages area background ──────────────────────────── */
+html[data-theme="light"] .chat-messages-area {
+  background-image: var(--chat-wallpaper-image) !important;
+  background-color: var(--chat-wallpaper-bg, var(--bg-app)) !important;
+  background-size: var(--chat-wallpaper-size) !important;
+}
+
+/* Date separator pill */
+html[data-theme="light"] .chat-messages-area .bg-surface-900 {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-muted) !important;
+}
+html[data-theme="light"] .chat-messages-area .bg-surface-800 {
+  background-color: var(--bg-elevated) !important;
+}
+
+/* ─── Light theme: message bubbles ───────────────────────────────────────── */
+html[data-theme="light"] .message-time {
+  color: var(--text-muted) !important;
+}
+
+/* ─── Light theme: search messages panel ─────────────────────────────────── */
+html[data-theme="light"] .bg-surface-900.border-b.border-surface-800 {
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color) !important;
+}
+html[data-theme="light"] .bg-surface-800.border.border-surface-700.rounded-xl {
+  background-color: var(--bg-elevated) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACCENT COLOR SYSTEM
+   Rules after @tailwind so they win specificity.
+   Per-accent variable sets + universal overrides using var(--accent-*).
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Per-accent variable sets ─────────────────────────────────────────────── */
+html[data-accent="violet"]  { --accent-primary: #7c3aed; --accent-light: #8b5cf6; --accent-primary-rgb: 124,58,237;  --accent-light-rgb: 139,92,246;  }
+html[data-accent="blue"]    { --accent-primary: #2563eb; --accent-light: #3b82f6; --accent-primary-rgb: 37,99,235;   --accent-light-rgb: 59,130,246;  }
+html[data-accent="emerald"] { --accent-primary: #059669; --accent-light: #10b981; --accent-primary-rgb: 5,150,105;   --accent-light-rgb: 16,185,129;  }
+html[data-accent="rose"]    { --accent-primary: #e11d48; --accent-light: #f43f5e; --accent-primary-rgb: 225,29,72;   --accent-light-rgb: 244,63,94;   }
+html[data-accent="amber"]   { --accent-primary: #d97706; --accent-light: #f59e0b; --accent-primary-rgb: 217,119,6;   --accent-light-rgb: 245,158,11;  }
+html[data-accent="cyan"]    { --accent-primary: #0891b2; --accent-light: #06b6d4; --accent-primary-rgb: 8,145,178;   --accent-light-rgb: 6,182,212;   }
+html[data-accent="pink"]    { --accent-primary: #db2777; --accent-light: #ec4899; --accent-primary-rgb: 219,39,119;  --accent-light-rgb: 236,72,153;  }
+html[data-accent="indigo"]  { --accent-primary: #4338ca; --accent-light: #6366f1; --accent-primary-rgb: 67,56,202;   --accent-light-rgb: 99,102,241;  }
+
+/* ── Primary button ───────────────────────────────────────────────────────── */
+.btn-primary {
+  background-color: var(--accent-primary) !important;
+  transition-duration: var(--transition-duration);
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-light) !important;
+}
+
+/* ── Sent chat bubble ─────────────────────────────────────────────────────── */
+.chat-bubble-sent { background-color: var(--accent-primary) !important; }
+
+/* ── Badge ────────────────────────────────────────────────────────────────── */
+.badge { background-color: var(--accent-primary) !important; }
+
+/* ── Text accent colors ───────────────────────────────────────────────────── */
+.text-nexchat-400, .text-nexchat-300 { color: var(--accent-light)   !important; }
+.text-nexchat-500                    { color: var(--accent-primary)  !important; }
+
+/* ── Accent background tints (nav highlights, etc.) ──────────────────────── */
+.bg-nexchat-600\/10 { background-color: rgba(var(--accent-primary-rgb), 0.10) !important; }
+.bg-nexchat-600\/15 { background-color: rgba(var(--accent-primary-rgb), 0.15) !important; }
+.bg-nexchat-600\/20 { background-color: rgba(var(--accent-primary-rgb), 0.20) !important; }
+.bg-nexchat-600\/30 { background-color: rgba(var(--accent-primary-rgb), 0.30) !important; }
+.bg-nexchat-600\/40 { background-color: rgba(var(--accent-primary-rgb), 0.40) !important; }
+.bg-nexchat-500\/20 { background-color: rgba(var(--accent-light-rgb),   0.20) !important; }
+
+/* ── Solid accent backgrounds ─────────────────────────────────────────────── */
+.bg-nexchat-600 { background-color: var(--accent-primary) !important; }
+.bg-nexchat-500 { background-color: var(--accent-light)   !important; }
+
+/* ── Accent hover backgrounds ─────────────────────────────────────────────── */
+.hover\:bg-nexchat-500:hover { background-color: var(--accent-light)   !important; }
+.hover\:bg-nexchat-600:hover { background-color: var(--accent-primary)  !important; }
+
+/* ── Accent borders ───────────────────────────────────────────────────────── */
+.border-nexchat-500     { border-color: var(--accent-primary)                       !important; }
+.border-nexchat-600     { border-color: var(--accent-primary)                       !important; }
+.border-nexchat-600\/30 { border-color: rgba(var(--accent-primary-rgb), 0.30)       !important; }
+.border-nexchat-600\/50 { border-color: rgba(var(--accent-primary-rgb), 0.50)       !important; }
+
+/* ── Focus rings / borders ────────────────────────────────────────────────── */
+.focus\:border-nexchat-500:focus {
+  border-color: var(--accent-primary) !important;
+}
+.focus\:ring-nexchat-500\/50:focus {
+  --tw-ring-color: rgba(var(--accent-primary-rgb), 0.5) !important;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent-primary) !important;
+  outline-color: var(--accent-primary) !important;
+}
+
+/* ── Ring utilities ───────────────────────────────────────────────────────── */
+.ring-nexchat-500 { --tw-ring-color: var(--accent-primary) !important; }
+
+/* ── Selection ────────────────────────────────────────────────────────────── */
+::selection { background-color: rgba(var(--accent-primary-rgb), 0.4) !important; }
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar-thumb { background-color: var(--border-color, #3f3f46) !important; }
+
+/* ── Toast ────────────────────────────────────────────────────────────────── */
+.Toastify__progress-bar { background-color: var(--accent-primary) !important; }
+
+/* ── Emoji picker ─────────────────────────────────────────────────────────── */
+.EmojiPickerReact { --epr-highlight-color: var(--accent-primary) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UNIVERSAL HOVER SYSTEM
+   All hover:bg-surface-* classes use --bg-hover so they adapt to both
+   dark/light theme AND never show a hardcoded black in light mode.
+═══════════════════════════════════════════════════════════════════════════ */
+.hover\:bg-surface-800:hover { background-color: var(--bg-hover)      !important; }
+.hover\:bg-surface-700:hover { background-color: var(--bg-hover-deep) !important; }
+.hover\:bg-surface-600:hover { background-color: var(--bg-hover-deep) !important; }
+
+/* Active states */
+.active\:bg-surface-700:active { background-color: var(--bg-hover-deep) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE LAYER
+═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html {
+    font-family: "Inter", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-surface-950 text-white overflow-hidden;
+    background-color: var(--bg-app) !important;
+    color: var(--text-primary) !important;
+    height: var(--app-height);
+    width: 100vw;
+    /* position:fixed prevents scroll-bounce on iOS but can break some Android
+       keyboards. We keep it but pair with overscroll-behavior:none. */
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    overscroll-behavior: none;
+  }
+
+  #root {
+    height: var(--app-height);
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  ::-webkit-scrollbar       { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-surface-700 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-surface-600; }
+  ::selection { @apply bg-nexchat-600/40; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENTS
+═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .btn-primary {
+    @apply bg-nexchat-600 hover:bg-nexchat-500 text-white font-medium px-4 py-2 rounded-xl
+           transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+    transition-duration: var(--transition-duration);
+  }
+  .btn-secondary {
+    @apply bg-surface-800 hover:bg-surface-700 text-white font-medium px-4 py-2 rounded-xl
+           transition-all active:scale-95;
+    transition-duration: var(--transition-duration);
+  }
+  .btn-ghost {
+    @apply hover:bg-surface-800 text-surface-400 hover:text-white font-medium px-3 py-2
+           rounded-xl transition-all active:scale-95;
+    transition-duration: var(--transition-duration);
+  }
+  .btn-danger {
+    @apply bg-rose-600 hover:bg-rose-500 text-white font-medium px-4 py-2 rounded-xl
+           transition-all active:scale-95;
+  }
+  .input-field {
+    @apply w-full bg-surface-800 border border-surface-700 text-white placeholder-surface-500
+           rounded-xl px-4 py-3 focus:outline-none focus:border-nexchat-500
+           focus:ring-1 focus:ring-nexchat-500/50 transition-all;
+    transition-duration: var(--transition-duration);
+  }
+  .glass-panel { @apply bg-surface-900/80 backdrop-blur-md border border-surface-800/50; }
+  .chat-bubble-sent {
+    @apply text-white rounded-2xl rounded-br-sm px-3 py-2 sm:px-4;
+    max-width: min(280px, 80vw);
+    background-color: var(--accent-primary);
+  }
+  .chat-bubble-received {
+    @apply bg-surface-800 text-white rounded-2xl rounded-bl-sm px-3 py-2 sm:px-4;
+    max-width: min(280px, 80vw);
+  }
+  .sidebar-item        { @apply flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all hover:bg-surface-800; }
+  .sidebar-item-active { @apply bg-nexchat-600/20 border border-nexchat-600/30 text-nexchat-400; }
+  .avatar              { @apply rounded-full flex items-center justify-center font-semibold text-white flex-shrink-0 overflow-hidden; }
+  .badge               { @apply bg-nexchat-600 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1; }
+  .modal-overlay       { @apply fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4; }
+  .modal-content       { @apply bg-surface-900 border border-surface-800 rounded-2xl shadow-2xl w-full max-w-md mx-3 sm:mx-0; }
+  .tooltip             { @apply absolute z-50 bg-surface-800 text-white text-xs px-2 py-1 rounded-lg whitespace-nowrap pointer-events-none; }
+  .msg-input {
+    /* font-size 16px prevents iOS auto-zoom on focus */
+    font-size: 16px;
+    line-height: 1.4;
+    min-height: 44px;
+    display: block;
+    width: 100%;
+    background-color: #27272a;
+    color: #ffffff;
+    caret-color: #ffffff;
+    &::placeholder { color: #71717a; }
+    transition-property: border-color, box-shadow;
+    transition-duration: var(--transition-duration, 200ms);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  .text-gradient { @apply bg-gradient-to-r from-nexchat-400 to-violet-400 bg-clip-text text-transparent; }
+  .glow-nexchat  { box-shadow: 0 0 20px rgba(var(--accent-primary-rgb, 124,58,237), 0.3); }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar  { -ms-overflow-style: none; scrollbar-width: none; }
+  .message-time  { @apply text-[10px] text-surface-400 mt-1 select-none; }
+
+  .chat-window-grid {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    /* Prevent any child from causing horizontal overflow */
+    max-width: 100%;
+  }
+
+  .chat-messages-area {
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    background-image: var(--chat-wallpaper-image);
+    background-color: var(--chat-wallpaper-bg);
+    background-size: var(--chat-wallpaper-size);
+    font-size: var(--chat-font-size);
+  }
+
+  .chat-input-area {
+    flex-shrink: 0;
+    /* Safe area for notched phones (home indicator) */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* Prevent input area from overflowing horizontally */
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  /* No bottom nav — mobile offset is zero */
+  .chat-window-mobile-offset { padding-bottom: 0; }
+
+  .density-px  { padding-left: var(--density-px);  padding-right: var(--density-px);  }
+  .density-py  { padding-top:  var(--density-py);   padding-bottom: var(--density-py); }
+  .density-gap { gap: var(--density-gap); }
+
+  /* ── Responsive emoji picker container ─────────────────────────────────── */
+  .emoji-picker-container {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    z-index: 50;
+    max-width: calc(100vw - 32px);
+    overflow: hidden;
+  }
+
+  /* ── Prevent horizontal overflow everywhere ─────────────────────────────── */
+  .overflow-x-safe {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THIRD-PARTY OVERRIDES
+═══════════════════════════════════════════════════════════════════════════ */
+.EmojiPickerReact {
+  --epr-bg-color:                       #18181b !important;
+  --epr-category-label-bg-color:        #18181b !important;
+  --epr-hover-bg-color:                 #27272a !important;
+  --epr-focus-bg-color:                 #27272a !important;
+  --epr-highlight-color:                var(--accent-primary) !important;
+  --epr-search-input-bg-color:          #27272a !important;
+  --epr-search-input-text-color:        #fff    !important;
+  --epr-search-input-placeholder-color: #71717a !important;
+  --epr-text-color:                     #fff    !important;
+  border: 1px solid #27272a !important;
+  border-radius: 16px !important;
+}
+
+.Toastify__toast,
+.baatchit-toast {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 0.75rem !important;
+}
+.Toastify__toast-body { @apply text-sm; }
+.Toastify__progress-bar { background-color: var(--accent-primary) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════════════════════════════════ */
+@keyframes messageIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+.message-enter { animation: messageIn var(--animation-duration, 200ms) ease-out; }
+
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+.animate-fade-in { animation: fadeIn var(--animation-duration, 200ms) ease-in-out; }
+
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.animate-slide-up { animation: slideUp var(--animation-duration, 300ms) ease-out; }
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.animate-slide-in-right { animation: slideInRight var(--animation-duration, 300ms) ease-out; }
+
+@keyframes callPulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.05); }
+}
+.call-pulse { animation: callPulse 1s ease-in-out infinite; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE OVERRIDES
+   Mobile-first breakpoints for all major UI sections.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Global overflow guard ───────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  min-width: 0;          /* prevents flex/grid children from overflowing */
+}
+
+/* ── Prevent any element from causing horizontal scroll ─────────────────── */
+html, body, #root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* ── Chat bubble responsive max-width ───────────────────────────────────── */
+.chat-bubble-sent,
+.chat-bubble-received {
+  max-width: min(280px, 78vw);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+@media (min-width: 480px) {
+  .chat-bubble-sent,
+  .chat-bubble-received {
+    max-width: min(340px, 72vw);
+  }
+}
+
+@media (min-width: 768px) {
+  .chat-bubble-sent,
+  .chat-bubble-received {
+    max-width: min(420px, 65vw);
+  }
+}
+
+@media (min-width: 1024px) {
+  .chat-bubble-sent,
+  .chat-bubble-received {
+    max-width: min(520px, 60vw);
+  }
+}
+
+/* ── Message bubble hover actions — clamp to screen ─────────────────────── */
+@media (max-width: 479px) {
+  /* On very small screens, hide hover actions to prevent overflow */
+  .group .opacity-0.group-hover\:opacity-100 {
+    display: none;
+  }
+}
+
+/* ── Emoji picker — responsive width ────────────────────────────────────── */
+.EmojiPickerReact {
+  max-width: calc(100vw - 24px) !important;
+  width: min(320px, calc(100vw - 24px)) !important;
+}
+
+/* ── Message input area ──────────────────────────────────────────────────── */
+@media (max-width: 479px) {
+  /* Tighter padding on very small phones */
+  .chat-input-area > div {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    padding-top: 0.375rem !important;
+    padding-bottom: 0.375rem !important;
+  }
+}
+
+/* ── Images and media inside bubbles ────────────────────────────────────── */
+.chat-bubble-sent img,
+.chat-bubble-sent video,
+.chat-bubble-received img,
+.chat-bubble-received video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Settings panel responsive ──────────────────────────────────────────── */
+@media (max-width: 639px) {
+  /* Settings sidebar takes full width on mobile (handled in JSX already,
+     but ensure content area also fills properly) */
+  .settings-content-area {
+    padding-bottom: 5rem;
+  }
+}
+
+/* ── Modal responsive ───────────────────────────────────────────────────── */
+@media (max-width: 479px) {
+  .modal-content {
+    margin: 0.5rem !important;
+    border-radius: 1rem !important;
+    max-height: calc(var(--app-height) - 1rem);
+    overflow-y: auto;
+  }
+  .modal-overlay {
+    padding: 0.5rem !important;
+    align-items: flex-end;
+  }
+}
+
+/* ── Call modal responsive ──────────────────────────────────────────────── */
+@media (max-width: 479px) {
+  /* Call controls bar — tighter on small phones */
+  .call-controls-bar {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    gap: 0.75rem !important;
+  }
+}
+
+/* ── Sidebar tooltip — hide on touch devices ────────────────────────────── */
+@media (hover: none) {
+  .group:hover .group-hover\:opacity-100 {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
+/* ── Chat list item — prevent text overflow ─────────────────────────────── */
+.chat-list-item-name,
+.chat-list-item-preview {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ── Profile page responsive ────────────────────────────────────────────── */
+@media (max-width: 479px) {
+  .profile-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Incoming call modal ─────────────────────────────────────────────────── */
+@media (max-width: 479px) {
+  .incoming-call-modal {
+    margin: 0.75rem;
+    padding: 1.25rem !important;
+  }
+}
+
+/* ── Search messages panel ───────────────────────────────────────────────── */
+@media (max-width: 639px) {
+  .search-panel-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+  }
+}
+
+/* ── Scrollbar — thinner on mobile ──────────────────────────────────────── */
+@media (max-width: 639px) {
+  ::-webkit-scrollbar { width: 2px; height: 2px; }
+}
+
+/* ── Touch-friendly tap targets ─────────────────────────────────────────── */
+/* Only apply min-size to interactive elements that need it.
+   Small UI controls (toggles, swatches, icon buttons) are excluded
+   so they don't become oversized circles on 320px/375px screens. */
+@media (hover: none) and (pointer: coarse) {
+  /* Full-width action buttons and nav items get the 44px minimum */
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger {
+    min-height: 44px;
+  }
+  /* Sidebar nav buttons */
+  nav button {
+    min-height: 40px;
+  }
+  /* DO NOT apply min-height/min-width to ALL buttons —
+     that breaks toggles, swatches, icon buttons in settings */
+}
+
+/* ── Prevent zoom on input focus (iOS) ──────────────────────────────────── */
+@media (max-width: 767px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* ── Chat header actions — hide less important on tiny screens ───────────── */
+@media (max-width: 359px) {
+  .chat-header-actions .optional-action {
+    display: none;
+  }
+}
+
+/* ── Light theme responsive fixes ───────────────────────────────────────── */
+html[data-theme="light"] .chat-bubble-sent {
+  color: #ffffff !important;
+}
+
+/* ── Safe area insets for notched phones ────────────────────────────────── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .chat-input-area {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SETTINGS — 320px SPECIFIC OVERRIDES
+   These ensure the settings UI is fully usable on the smallest phones.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Prevent any settings card or row from causing horizontal overflow */
+.settings-content,
+.settings-content * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* At 320px the sidebar takes full width (handled in JSX).
+   When a section is active the content area is full width — ensure it
+   never overflows horizontally. */
+@media (max-width: 359px) {
+  /* Tighten card margins to 6px on each side */
+  .settings-card-xs {
+    margin-left: 6px !important;
+    margin-right: 6px !important;
+  }
+
+  /* Section title — less top padding */
+  .settings-section-title {
+    padding-top: 0.75rem !important;
+    padding-left: 0.5rem !important;
+  }
+
+  /* Inputs — ensure 16px font to prevent iOS zoom */
+  .settings-content input,
+  .settings-content textarea,
+  .settings-content select {
+    font-size: 16px !important;
+  }
+
+  /* Toggle — slightly smaller to save space */
+  .settings-toggle {
+    width: 36px !important;
+    height: 20px !important;
+  }
+  .settings-toggle span {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  .settings-toggle span.translate-x-5 {
+    transform: translateX(16px) !important;
+  }
+}

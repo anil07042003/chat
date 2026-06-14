@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: baatchit-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: baatchit
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - baatchit-network
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: baatchit-server
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DATABASE_URL: mongodb://mongodb:27017/baatchit
+      JWT_KEY: ${JWT_KEY:-change_this_in_production}
+      PEPPER_STRING: ${PEPPER_STRING:-change_this_in_production}
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      NODE_ENV: production
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - mongodb
+    networks:
+      - baatchit-network
+
+volumes:
+  mongodb_data:
+  uploads_data:
+
+networks:
+  baatchit-network:
+    driver: bridge
