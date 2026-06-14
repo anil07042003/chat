@@ -7,7 +7,8 @@ import path from "path";
 const MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 const createToken = (email, userId) => {
-  return jwt.sign({ email, userId }, process.env.JWT_KEY, {
+  const jwtKey = process.env.JWT_KEY || "baatchit";
+  return jwt.sign({ email, userId }, jwtKey, {
     expiresIn: "7d",
   });
 };

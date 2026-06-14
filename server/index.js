@@ -40,9 +40,10 @@ const port = process.env.PORT || 3001;
 // In development: allow ALL origins so mobile devices on the same Wi-Fi
 // and VS Code forwarded ports can connect without CORS errors.
 // In production: restrict to the explicit ORIGIN list.
+const defaultOrigins = ["http://localhost:3000", "http://localhost:5173", "https://chat-red-mu.vercel.app"];
 const allowedOrigins = process.env.ORIGIN
   ? process.env.ORIGIN.split(",").map((o) => o.trim())
-  : ["http://localhost:3000", "http://localhost:5173"];
+  : defaultOrigins;
 
 const isDev = process.env.NODE_ENV !== "production";
 app.get("/health", (req, res) => {
