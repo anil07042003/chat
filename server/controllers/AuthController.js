@@ -60,7 +60,7 @@ export const signup = async (req, res) => {
 
     // ── Hash password ─────────────────────────────────────────────────────
     const salt = await bcrypt.genSalt(12);
-    const pepper = process.env.PEPPER_STRING || "";
+    const pepper = process.env.PEPPER_STRING || "dev_pepper";
     const hashedPassword = await bcrypt.hash(salt + password + pepper, 12);
 
     // ── Create user ───────────────────────────────────────────────────────
@@ -89,6 +89,19 @@ export const signup = async (req, res) => {
     // Log the full error so it's visible in the server terminal
     console.error("Signup error:", error?.message || error);
     console.error("Signup error stack:", error?.stack);
+
+    if (error?.code === 11000) {
+      const duplicateField = Object.keys(error.keyValue || {}).join(", ") || "field";
+      return res.status(409).json({ error: `${duplicateField} already exists` });
+    }
+
+    if (error?.name === "ValidationError") {
+      return res.status(400).json({ error: error.message });
+    }
+
+    if (error?.message?.includes("E11000 duplicate key error")) {
+      return res.status(409).json({ error: "Email or username already exists" });
+    }
 
     // In development, return the actual error message to help debugging
     const isDev = process.env.NODE_ENV !== "production";

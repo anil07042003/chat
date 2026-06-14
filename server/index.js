@@ -151,13 +151,29 @@ process.on("SIGTERM", shutdown);
 process.on("SIGINT",  shutdown);
 
 // ─── DATABASE ──────────────────────────────────────────────────────────────
+const getDatabaseUri = () => {
+  return (
+    process.env.DATABASE_URL ||
+    process.env.MONGO_URI ||
+    process.env.MONGODB_URI ||
+    ""
+  );
+};
+
 const connectDB = async (retries = 5, delay = 3000) => {
+  const dbUri = getDatabaseUri();
+
+  if (!dbUri) {
+    console.error("❌ No database connection string found. Set DATABASE_URL, MONGO_URI, or MONGODB_URI.");
+    return;
+  }
+
   for (let i = 1; i <= retries; i++) {
     try {
-      await mongoose.connect(process.env.DATABASE_URL, {
+      await mongoose.connect(dbUri, {
         serverSelectionTimeoutMS: 5000,
       });
-      console.log("✅ Connected to MongoDB:", process.env.DATABASE_URL);
+      console.log("✅ Connected to MongoDB:", dbUri);
       return;
     } catch (err) {
       console.error(`❌ MongoDB connection attempt ${i}/${retries} failed:`, err.message);
@@ -166,8 +182,10 @@ const connectDB = async (retries = 5, delay = 3000) => {
         await new Promise((r) => setTimeout(r, delay));
       } else {
         console.error("❌ All MongoDB connection attempts failed. Auth will return 503 until DB is available.");
-        console.error("   Make sure MongoDB is running: mongod --dbpath <your-db-path>");
+        console.error("   Make sure MongoDB is running or the connection string is valid.");
         console.error("   DATABASE_URL:", process.env.DATABASE_URL);
+        console.error("   MONGO_URI:", process.env.MONGO_URI);
+        console.error("   MONGODB_URI:", process.env.MONGODB_URI);
       }
     }
   }

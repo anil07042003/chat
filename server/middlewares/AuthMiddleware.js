@@ -7,7 +7,8 @@ export const verifyToken = (req, res, next) => {
     return res.status(401).json({ error: "Unauthorized - No token provided" });
   }
 
-  jwt.verify(token, process.env.JWT_KEY, (error, payload) => {
+  const jwtKey = process.env.JWT_KEY || "baatchit";
+  jwt.verify(token, jwtKey, (error, payload) => {
     if (error) {
       if (error.name === "TokenExpiredError") {
         return res.status(401).json({ error: "Token expired" });
@@ -23,7 +24,8 @@ export const optionalAuth = (req, res, next) => {
   const token = req.cookies.jwt;
   if (!token) return next();
 
-  jwt.verify(token, process.env.JWT_KEY, (error, payload) => {
+  const jwtKey = process.env.JWT_KEY || "baatchit";
+  jwt.verify(token, jwtKey, (error, payload) => {
     if (!error) req.userId = payload.userId;
     next();
   });
