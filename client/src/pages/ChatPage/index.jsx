@@ -119,11 +119,11 @@ const ChatPage = () => {
 
   return (
     <div
-      className="flex overflow-hidden app-bg"
+      className="flex flex-col-reverse sm:flex-row overflow-hidden app-bg"
       style={{ height: "var(--app-height)", width: "100vw", maxWidth: "100vw" }}
     >
       {/* ── ICON SIDEBAR — always visible, narrows when chat open ── */}
-        <div ref={sidebarRef} className="flex-shrink-0 min-w-0">
+      <div ref={sidebarRef} className="flex-shrink-0 min-w-0">
         <Sidebar />
       </div>
 
@@ -142,7 +142,7 @@ const ChatPage = () => {
           <div
             ref={panelRef}
             className={`
-              flex-shrink-0 flex flex-col border-r border-surface-800 min-h-0 min-w-0 max-w-full
+              flex-1 sm:flex-none sm:flex-shrink-0 flex flex-col border-r border-surface-800 min-h-0 min-w-0 max-w-full
               transition-all duration-300 ease-in-out
               ${selectedChatData
                 ? "sm:w-[min(18rem,34vw)] lg:w-[min(20rem,30vw)]"

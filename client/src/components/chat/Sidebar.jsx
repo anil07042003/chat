@@ -57,16 +57,17 @@ const Sidebar = () => {
   return (
     <div
       className={`
-        flex flex-col items-center theme-panel border-r theme-border
-        py-3 gap-1 flex-shrink-0 h-full
+        mobile-bottom-nav flex flex-row sm:flex-col items-center theme-panel border-t sm:border-t-0 sm:border-r theme-border
+        px-1 py-1.5 sm:px-0 sm:py-3 gap-1 flex-shrink-0
+        h-14 sm:h-full w-full sm:w-auto
         transition-all duration-300 ease-in-out
-        ${isCompact ? "w-12" : "w-14 sm:w-16"}
+        ${isCompact ? "sm:w-12" : "sm:w-16"}
       `}
     >
       {/* Logo — BaatChit brand image */}
       <div
         className={`
-          rounded-xl overflow-hidden flex items-center justify-center mb-2 flex-shrink-0
+          rounded-xl overflow-hidden hidden sm:flex items-center justify-center mb-2 flex-shrink-0
           transition-all duration-300 theme-card
           ${isCompact ? "w-8 h-8" : "w-9 h-9 sm:w-10 sm:h-10"}
         `}
@@ -79,7 +80,7 @@ const Sidebar = () => {
       </div>
 
       {/* Nav items */}
-      <nav className="flex flex-col gap-0.5 flex-1 w-full px-1">
+      <nav className="flex flex-row sm:flex-col gap-0.5 flex-1 w-full px-1 min-w-0">
         {NAV_ITEMS.map(({ id, icon: Icon, activeIcon: ActiveIcon, label }) => {
           const isActive  = activePanel === id;
           const showBadge = id === "requests" && friendRequestsCount > 0;
@@ -92,7 +93,7 @@ const Sidebar = () => {
               aria-label={label}
               disabled={false}
               className={`
-                relative w-full aspect-square rounded-xl flex items-center justify-center
+                relative flex-1 sm:flex-none sm:w-full h-11 sm:h-auto sm:aspect-square rounded-xl flex items-center justify-center
                 transition-all duration-200 group touch-compact cursor-pointer
                 ${isActive
                   ? "bg-nexchat-600/20 text-nexchat-400"
@@ -121,7 +122,7 @@ const Sidebar = () => {
       </nav>
 
       {/* User avatar — dot reflects the user's own online status visibility setting */}
-      <div className="mt-auto pt-1">
+      <div className="ml-1 sm:ml-0 sm:mt-auto sm:pt-1 flex-shrink-0">
         <Avatar
           user={{
             ...userInfo,

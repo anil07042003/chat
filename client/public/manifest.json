@@ -1,0 +1,58 @@
+{
+  "name": "BaatChit - Real-time Chat",
+  "short_name": "BaatChit",
+  "description": "Modern real-time messaging platform with calls, groups, and file sharing",
+  "scope": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#7c3aed",
+  "background_color": "#09090b",
+  "categories": ["productivity", "social"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/baatchit-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/baatchit-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/baatchit-icon.svg",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "purpose": "any"
+    },
+    {
+      "src": "/baatchit-icon.svg",
+      "sizes": "1280x720",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Chat",
+      "short_name": "Chat",
+      "description": "Start a new conversation",
+      "url": "/chat?action=new",
+      "icons": [
+        {
+          "src": "/baatchit-icon.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

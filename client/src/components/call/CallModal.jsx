@@ -23,6 +23,7 @@ import {
   IoMic, IoMicOff, IoVideocam, IoVideocamOff,
   IoCall, IoDesktop, IoDesktopOutline,
   IoVolumeMedium, IoVolumeMute, IoWarning,
+  IoCameraReverse,
 } from "react-icons/io5";
 import { toast } from "react-toastify";
 
@@ -64,6 +65,10 @@ const CallModal = () => {
   const [isCameraOff,     setIsCameraOff]      = useState(false);
   const [isScreenSharing, setIsScreenSharing]  = useState(false);
   const [isSpeakerOff,    setIsSpeakerOff]     = useState(false);
+  const [cameraDevices,   setCameraDevices]    = useState([]);
+  const [selectedCameraId,setSelectedCameraId] = useState(null);
+  const [cameraFacingMode,setCameraFacingMode] = useState("user");
+  const [isSwitchingCamera,setIsSwitchingCamera] = useState(false);
   const [callDuration,    setCallDuration]      = useState(0);
   const [callStatus,      setCallStatus]        = useState("connecting");
   const [mediaError,      setMediaError]        = useState(null);
@@ -223,7 +228,9 @@ const CallModal = () => {
           status: reason === "rejected" ? "rejected" : "ended",
           duration,
         });
-      } catch (_) {}
+      } catch (err) {
+        console.warn("Unable to update call status:", err.message);
+      }
     }
     cleanup();
     setActiveCall(null);
@@ -239,18 +246,43 @@ const CallModal = () => {
   }, []);
 
   // ── Get local media with fallbacks ────────────────────────────────────────
+  const gatherCameraDevices = useCallback(async () => {
+    if (!navigator?.mediaDevices?.enumerateDevices) return [];
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      return devices.filter((device) => device.kind === "videoinput");
+    } catch {
+      return [];
+    }
+  }, []);
+
   const getLocalMedia = useCallback(async (callType) => {
     const wantVideo = callType === "video";
     try {
+      const videoConstraints = wantVideo
+        ? selectedCameraId
+          ? { deviceId: { exact: selectedCameraId }, width: { ideal: 1280 }, height: { ideal: 720 } }
+          : { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: cameraFacingMode }
+        : false;
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        video: wantVideo
-          ? { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }
-          : false,
+        video: videoConstraints,
       });
+
+      const videoInputs = await gatherCameraDevices();
+      setCameraDevices(videoInputs);
+      const cameraTrack = stream.getVideoTracks()[0];
+      if (cameraTrack) {
+        const settings = cameraTrack.getSettings?.() ?? {};
+        if (settings.deviceId) setSelectedCameraId(settings.deviceId);
+        if (settings.facingMode) setCameraFacingMode(settings.facingMode);
+      }
+
       return { stream, videoEnabled: wantVideo };
     } catch (err) {
       if (wantVideo && ["NotFoundError","NotReadableError","OverconstrainedError"].includes(err.name)) {
+        // eslint-disable-next-line no-useless-catch
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: { echoCancellation: true, noiseSuppression: true }, video: false,
@@ -263,11 +295,13 @@ const CallModal = () => {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
           return { stream, videoEnabled: false };
-        } catch (_) {}
+        } catch {
+          // Keep the original media error so the caller can show the right message.
+        }
       }
       throw err;
     }
-  }, []);
+  }, [cameraFacingMode, gatherCameraDevices, selectedCameraId]);
 
   // ── Main effect — WebRTC setup ────────────────────────────────────────────
   useEffect(() => {
@@ -479,6 +513,76 @@ const CallModal = () => {
     setIsCameraOff(c => !c);
   };
 
+  const replaceLocalVideoTrack = useCallback(async (newVideoTrack) => {
+    newVideoTrack.enabled = !isCameraOff;
+
+    const pc = pcRef.current;
+    if (pc) {
+      const sender = pc.getSenders().find((s) => s.track?.kind === "video");
+      await sender?.replaceTrack(newVideoTrack);
+    }
+
+    const audioTracks = localStreamRef.current?.getAudioTracks() ?? [];
+    localStreamRef.current?.getVideoTracks().forEach((t) => t.stop());
+    localStreamRef.current = new MediaStream([...audioTracks, newVideoTrack]);
+    if (localVideoEl.current) {
+      localVideoEl.current.srcObject = localStreamRef.current;
+      safePlay(localVideoEl.current);
+    }
+  }, [isCameraOff]);
+
+  const switchCamera = useCallback(async () => {
+    if (isSwitchingCamera || isScreenSharing) return;
+
+    setIsSwitchingCamera(true);
+    try {
+      const latestDevices = await gatherCameraDevices();
+      if (latestDevices.length) setCameraDevices(latestDevices);
+
+      const usableDevices = latestDevices.length ? latestDevices : cameraDevices;
+      const currentTrack = localStreamRef.current?.getVideoTracks()?.[0];
+      const currentSettings = currentTrack?.getSettings?.() ?? {};
+      const currentId = selectedCameraId || currentSettings.deviceId;
+      const currentIndex = usableDevices.findIndex((device) => device.deviceId === currentId);
+      const nextDevice = usableDevices.length > 1
+        ? usableDevices[(currentIndex >= 0 ? currentIndex + 1 : 0) % usableDevices.length]
+        : null;
+
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: nextDevice
+          ? { deviceId: { exact: nextDevice.deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
+          : {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: { exact: (currentSettings.facingMode || cameraFacingMode) === "user" ? "environment" : "user" },
+            },
+        audio: false,
+      });
+      const newVideoTrack = newStream.getVideoTracks()[0];
+      if (!newVideoTrack) throw new Error("No video track available");
+
+      await replaceLocalVideoTrack(newVideoTrack);
+
+      const nextSettings = newVideoTrack.getSettings?.() ?? {};
+      if (nextSettings.deviceId) setSelectedCameraId(nextSettings.deviceId);
+      if (nextSettings.facingMode) setCameraFacingMode(nextSettings.facingMode);
+      toast.success(`Switched to ${nextDevice?.label || "camera"}`);
+    } catch (err) {
+      console.error("Camera switch failed:", err);
+      toast.error(err.name === "OverconstrainedError" ? "No other camera available" : "Could not switch camera");
+    } finally {
+      setIsSwitchingCamera(false);
+    }
+  }, [
+    cameraDevices,
+    cameraFacingMode,
+    gatherCameraDevices,
+    isScreenSharing,
+    isSwitchingCamera,
+    replaceLocalVideoTrack,
+    selectedCameraId,
+  ]);
+
   const toggleScreenShare = async () => {
     const pc = pcRef.current;
     if (!pc) return;
@@ -551,7 +655,6 @@ const CallModal = () => {
         <audio
           ref={setRemoteAudioRef}
           autoPlay
-          playsInline
           style={{ position: "absolute", width: 0, height: 0, opacity: 0, pointerEvents: "none" }}
         />
       )}
@@ -623,6 +726,7 @@ const CallModal = () => {
         {isVideo && (
           <>
             <CallButton icon={isCameraOff ? IoVideocamOff : IoVideocam} label={isCameraOff ? "Cam On" : "Cam Off"} onClick={toggleCamera} active={isCameraOff} variant="secondary" />
+            <CallButton icon={IoCameraReverse} label={isSwitchingCamera ? "Switching" : "Switch"} onClick={switchCamera} active={isSwitchingCamera} variant="secondary" disabled={isScreenSharing || isSwitchingCamera} />
             <CallButton icon={isScreenSharing ? IoDesktop : IoDesktopOutline} label="Screen" onClick={toggleScreenShare} active={isScreenSharing} variant="secondary" />
           </>
         )}
@@ -639,13 +743,16 @@ const CallModal = () => {
   );
 };
 
-const CallButton = ({ icon: Icon, label, onClick, active, variant, size = "md" }) => {
+// eslint-disable-next-line react/prop-types
+const CallButton = ({ icon: Icon, label, onClick, active, variant, size = "md", disabled = false }) => {
   const sizeClass = size === "lg" ? "w-14 h-14 sm:w-16 sm:h-16" : "w-11 h-11 sm:w-12 sm:h-12";
   const iconSize = size === "lg" ? 24 : 20;
-  const variantClass = variant === "danger" ? "bg-rose-600 hover:bg-rose-500 text-white" : active ? "bg-nexchat-600/30 text-nexchat-400 border border-nexchat-600/50" : "bg-surface-800 hover:bg-surface-700 text-white";
+  const variantClass = disabled
+    ? "bg-surface-800/60 text-surface-500 cursor-not-allowed"
+    : variant === "danger" ? "bg-rose-600 hover:bg-rose-500 text-white" : active ? "bg-nexchat-600/30 text-nexchat-400 border border-nexchat-600/50" : "bg-surface-800 hover:bg-surface-700 text-white";
   return (
     <div className="flex flex-col items-center gap-1">
-      <button onClick={onClick} className={`${sizeClass} rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 ${variantClass}`}>
+      <button onClick={onClick} disabled={disabled} className={`${sizeClass} rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 disabled:active:scale-100 ${variantClass}`}>
         <Icon size={iconSize} />
       </button>
       <span className="text-xs text-surface-400">{label}</span>

@@ -6,6 +6,14 @@ export default {
   ],
   darkMode: "class",
   theme: {
+    screens: {
+      'xs': '375px',   // Small phones
+      'sm': '640px',   // Default Tailwind small
+      'md': '768px',   // Tablets
+      'lg': '1024px',  // Small laptops
+      'xl': '1280px',  // Laptops
+      '2xl': '1536px', // Desktops
+    },
     extend: {
       colors: {
         // BaatChit brand colors
@@ -38,6 +46,19 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
+      },
+      fontSize: {
+        'xs': ['0.75rem', { lineHeight: '1rem' }],
+        'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+        'base': ['1rem', { lineHeight: '1.5rem' }],
+        'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+        'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+      },
+      spacing: {
+        'safe-top': 'var(--safe-area-inset-top, 0)',
+        'safe-bottom': 'var(--safe-area-inset-bottom, 0)',
+        'safe-left': 'var(--safe-area-inset-left, 0)',
+        'safe-right': 'var(--safe-area-inset-right, 0)',
       },
       animation: {
         "fade-in": "fadeIn 0.2s ease-in-out",
