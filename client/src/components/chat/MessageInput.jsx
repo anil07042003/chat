@@ -7,6 +7,7 @@ import { debounce } from "../../utils/helpers";
 import {
   IoSend, IoAttach, IoHappy, IoMic, IoClose,
   IoImage, IoDocument, IoMusicalNote, IoVideocam,
+  IoLocation,
 } from "react-icons/io5";
 import EmojiPicker from "emoji-picker-react";
 import { toast } from "react-toastify";
@@ -86,6 +87,7 @@ const MessageInput = () => {
   const [showEmoji, setShowEmoji]     = useState(false);
   const [showAttach, setShowAttach]   = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isLocating, setIsLocating]   = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [replyTo, setReplyTo]         = useState(null);
   const [emojiPickerWidth, setEmojiPickerWidth] = useState(300);
@@ -224,6 +226,50 @@ const MessageInput = () => {
     handleFileUpload(file, messageType);
     e.target.value = "";
     setShowAttach(false);
+  };
+
+  const handleShareLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Location sharing is not supported by this browser");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const socket = getSocket();
+        if (!socket) {
+          setIsLocating(false);
+          return;
+        }
+
+        const locationMessage = {
+          sender: userInfo.id,
+          messageType: "location",
+          content: "Shared a location",
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        };
+
+        if (selectedChatType === "group") {
+          socket.emit("sendGroupMessage", { ...locationMessage, groupId: selectedChatData._id });
+        } else {
+          socket.emit("sendMessage", { ...locationMessage, recipient: selectedChatData._id });
+        }
+
+        setShowAttach(false);
+        setIsLocating(false);
+        toast.success("Location shared");
+      },
+      (error) => {
+        setIsLocating(false);
+        const message = error.code === error.PERMISSION_DENIED
+          ? "Location permission was denied"
+          : "Could not get your location";
+        toast.error(message);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+    );
   };
 
   const startRecording = async () => {
@@ -384,6 +430,15 @@ const MessageInput = () => {
                     <input type="file" accept={accept} className="hidden" onChange={(e) => handleFileSelect(e, type)} />
                   </label>
                 ))}
+                <button
+                  type="button"
+                  onClick={handleShareLocation}
+                  disabled={isLocating}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left hover:bg-surface-700 disabled:opacity-60 transition-colors"
+                >
+                  <IoLocation size={17} className="text-nexchat-400 flex-shrink-0" />
+                  <span className="text-sm text-white whitespace-nowrap">{isLocating ? "Getting location..." : "Location"}</span>
+                </button>
               </div>
             </AnchoredPopup>
           </div>

@@ -35,6 +35,7 @@ import {
   IoCopy,
   IoPlay,
   IoPause,
+  IoLocation,
 } from "react-icons/io5";
 import { toast } from "react-toastify";
 import EmojiPicker from "emoji-picker-react";
@@ -165,6 +166,8 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
       duration: message.duration,
       gifUrl: message.gifUrl,
       stickerUrl: message.stickerUrl,
+      latitude: message.latitude,
+      longitude: message.longitude,
       isForwarded: true,
       forwardedFrom: message.sender?._id || message.sender,
     };
@@ -407,6 +410,21 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
       );
     }
 
+    if (messageType === "location" && Number.isFinite(message.latitude) && Number.isFinite(message.longitude)) {
+      const mapUrl = `https://www.openstreetmap.org/?mlat=${encodeURIComponent(message.latitude)}&mlon=${encodeURIComponent(message.longitude)}#map=16/${encodeURIComponent(message.latitude)}/${encodeURIComponent(message.longitude)}`;
+      return (
+        <a href={mapUrl} target="_blank" rel="noreferrer" className="flex min-w-[210px] items-center gap-3 rounded-xl border border-white/10 bg-black/10 p-3 transition-colors hover:bg-black/20">
+          <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-nexchat-500/20 text-nexchat-300">
+            <IoLocation size={24} />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold">Shared location</span>
+            <span className="block text-xs opacity-75">Tap to open map</span>
+          </span>
+        </a>
+      );
+    }
+
     return <p className="text-sm text-surface-400 italic">Unsupported message type</p>;
   };
 
@@ -510,7 +528,7 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
         >
           {/* Hover actions — hidden on touch/small screens, shown on hover for pointer devices */}
           <div
-            className={`absolute top-1/2 -translate-y-1/2 ${isMine ? "-left-10 sm:-left-16" : "-right-10 sm:-right-16"} flex gap-1 z-10 opacity-100 pointer-events-auto sm:opacity-0 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto transition-opacity`}
+            className={`absolute top-1/2 -translate-y-1/2 ${isMine ? "-left-10 sm:-left-16" : "-right-10 sm:-right-16"} flex gap-1 z-10 transition-opacity ${showMenu ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto"}`}
           >
             <button
               onClick={() => setShowReactions(!showReactions)}

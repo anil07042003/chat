@@ -22,7 +22,7 @@ const messageSchema = new mongoose.Schema(
     },
     messageType: {
       type: String,
-      enum: ["text", "image", "video", "audio", "voice", "file", "gif", "sticker", "system"],
+      enum: ["text", "image", "video", "audio", "voice", "file", "gif", "sticker", "location", "system"],
       required: true,
       default: "text",
     },
@@ -35,6 +35,8 @@ const messageSchema = new mongoose.Schema(
     duration: { type: Number }, // for audio/video in seconds
     gifUrl: { type: String },
     stickerUrl: { type: String },
+    latitude: { type: Number, min: -90, max: 90 },
+    longitude: { type: Number, min: -180, max: 180 },
 
     // Reply
     replyTo: {
