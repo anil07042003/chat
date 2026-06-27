@@ -42,7 +42,10 @@ import EmojiPicker from "emoji-picker-react";
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 
 const MessageBubble = ({ message, isMine, isGroup }) => {
-  const { userInfo, selectedChatData, selectedChatType, updateMessage, removeMessage } = useAppStore();
+  const {
+    userInfo, selectedChatData, selectedChatType, updateMessage, removeMessage,
+    directMessagesContacts, groups,
+  } = useAppStore();
   const { getSocket } = useSocket();
   const [showMenu, setShowMenu] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
@@ -50,8 +53,11 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content || "");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showForwardPicker, setShowForwardPicker] = useState(false);
   const audioRef = useRef(null);
   const menuRef = useRef(null);
+  const longPressTimerRef = useRef(null);
+  const pointerStartRef = useRef(null);
 
   const mediaAutoDownload = userInfo?.chatSettings?.mediaAutoDownload !== false;
   const [mediaLoaded, setMediaLoaded] = useState(mediaAutoDownload);
@@ -59,6 +65,8 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
   useEffect(() => {
     setMediaLoaded(mediaAutoDownload);
   }, [mediaAutoDownload, message._id]);
+
+  useEffect(() => () => clearTimeout(longPressTimerRef.current), []);
 
   if (message.isDeleted) {
     return (
@@ -114,6 +122,62 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
     // Both delete modes remove the bubble for the current user immediately.
     removeMessage(message._id);
     setShowMenu(false);
+  };
+
+  const cancelLongPress = () => {
+    clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = null;
+  };
+
+  const handlePointerDown = (event) => {
+    if (event.button !== undefined && event.button !== 0) return;
+    if (event.target.closest("button, a, input, textarea, video, audio")) return;
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+    cancelLongPress();
+    longPressTimerRef.current = setTimeout(() => {
+      setShowMenu(true);
+      setShowReactions(false);
+      navigator.vibrate?.(35);
+    }, 550);
+  };
+
+  const handlePointerMove = (event) => {
+    const start = pointerStartRef.current;
+    if (!start) return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10) {
+      cancelLongPress();
+    }
+  };
+
+  const handleForward = (targetId, targetType) => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const forwardedMessage = {
+      sender: userInfo.id,
+      messageType: message.messageType,
+      content: message.content,
+      fileUrl: message.fileUrl,
+      fileName: message.fileName,
+      fileSize: message.fileSize,
+      fileMimeType: message.fileMimeType,
+      thumbnailUrl: message.thumbnailUrl,
+      duration: message.duration,
+      gifUrl: message.gifUrl,
+      stickerUrl: message.stickerUrl,
+      isForwarded: true,
+      forwardedFrom: message.sender?._id || message.sender,
+    };
+
+    if (targetType === "group") {
+      socket.emit("sendGroupMessage", { ...forwardedMessage, groupId: targetId });
+    } else {
+      socket.emit("sendMessage", { ...forwardedMessage, recipient: targetId });
+    }
+
+    setShowForwardPicker(false);
+    setShowMenu(false);
+    toast.success("Message forwarded");
   };
 
   const handleCopy = () => {
@@ -436,7 +500,14 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
         )}
 
         {/* Message bubble */}
-        <div className="relative">
+        <div
+          className="relative select-none"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={cancelLongPress}
+          onPointerCancel={cancelLongPress}
+          onContextMenu={(event) => { event.preventDefault(); setShowMenu(true); }}
+        >
           {/* Hover actions — hidden on touch/small screens, shown on hover for pointer devices */}
           <div
             className={`absolute top-1/2 -translate-y-1/2 ${isMine ? "-left-10 sm:-left-16" : "-right-10 sm:-right-16"} flex gap-1 z-10 opacity-100 pointer-events-auto sm:opacity-0 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto transition-opacity`}
@@ -485,6 +556,9 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
             <div
               className={`absolute ${isMine ? "right-0" : "left-0"} top-full mt-1 bg-surface-800 border border-surface-700 rounded-xl shadow-xl z-20 min-w-[160px] max-w-[200px] overflow-hidden`}
             >
+              <button onClick={() => { setShowReactions(true); setShowMenu(false); }} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white hover:bg-surface-700 transition-colors">
+                <span aria-hidden="true">☺</span> React
+              </button>
               {message.messageType === "text" && (
                 <button onClick={handleCopy} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white hover:bg-surface-700 transition-colors">
                   <IoCopy size={14} /> Copy
@@ -507,6 +581,9 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
               <div className="h-px bg-surface-700 my-1" />
               <button onClick={() => handleDelete(false)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-rose-400 hover:bg-surface-700 transition-colors">
                 <IoTrash size={14} /> Delete for me
+              </button>
+              <button onClick={() => { setShowForwardPicker(true); setShowMenu(false); }} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white hover:bg-surface-700 transition-colors">
+                <IoArrowRedo size={14} /> Forward
               </button>
               {isMine && (
                   <button onClick={() => handleDelete(true)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-rose-400 hover:bg-surface-700 transition-colors">
@@ -569,6 +646,32 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
             height={300}
             width={Math.min(280, window.innerWidth - 16)}
           />
+        </div>
+      )}
+
+      {showForwardPicker && (
+        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60 p-3 sm:items-center" onClick={() => setShowForwardPicker(false)}>
+          <div className="max-h-[70vh] w-full max-w-sm overflow-hidden rounded-2xl border border-surface-700 bg-surface-900 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-surface-700 px-4 py-3">
+              <h3 className="font-semibold text-white">Forward message</h3>
+              <button onClick={() => setShowForwardPicker(false)} className="rounded-lg px-2 py-1 text-surface-400 hover:bg-surface-800 hover:text-white">✕</button>
+            </div>
+            <div className="max-h-[55vh] overflow-y-auto p-2">
+              {[...(directMessagesContacts || []).map((contact) => ({ ...contact, targetType: "contact", label: getFullName(contact) })),
+                ...(groups || []).map((group) => ({ ...group, targetType: "group", label: group.name }))]
+                .filter((target) => target._id)
+                .map((target) => (
+                  <button key={`${target.targetType}-${target._id}`} onClick={() => handleForward(target._id, target.targetType)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-white hover:bg-surface-800">
+                    <Avatar user={target} size="sm" />
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{target.label || target.email || "Chat"}</span>
+                    <span className="text-xs capitalize text-surface-500">{target.targetType}</span>
+                  </button>
+                ))}
+              {!(directMessagesContacts?.length || groups?.length) && (
+                <p className="p-6 text-center text-sm text-surface-400">No chats available</p>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

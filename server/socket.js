@@ -178,6 +178,7 @@ const setupSocket = (server) => {
         stickerUrl,
         replyTo,
         isForwarded,
+        forwardedFrom,
         mentions,
       } = data;
 
@@ -196,6 +197,7 @@ const setupSocket = (server) => {
         stickerUrl,
         replyTo,
         isForwarded: isForwarded || false,
+        forwardedFrom,
         mentions: mentions || [],
       });
 
