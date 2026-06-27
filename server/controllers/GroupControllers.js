@@ -153,6 +153,7 @@ export const getGroupMessages = async (req, res) => {
       .sort((a, b) => new Date(b) - new Date(a))[0];
     const messageMatch = {
       isDeleted: { $ne: true },
+      deletedFor: { $ne: userId },
       ...(hiddenBefore ? { createdAt: { $gt: hiddenBefore } } : {}),
     };
     const total = await Message.countDocuments({

@@ -224,10 +224,15 @@ const setupSocket = (server) => {
 
       const finalData = { ...populated, groupId: group._id, group };
 
+      // Explicitly acknowledge the saved message to the sender.
+      emitToUser(sender, "groupMessageSent", { message: finalData });
+
       if (group && group.members) {
         group.members.forEach((member) => {
           const memberId = member.user._id.toString();
-          emitToUser(memberId, "receiveGroupMessage", finalData);
+          if (memberId !== sender.toString()) {
+            emitToUser(memberId, "receiveGroupMessage", finalData);
+          }
         });
       }
     } catch (error) {
@@ -384,15 +389,21 @@ const setupSocket = (server) => {
       const { messageId, deleteForEveryone, recipientId, groupId, senderId } = data;
 
       if (deleteForEveryone) {
-        await Message.findByIdAndUpdate(messageId, {
+        const deletedMessage = await Message.findOneAndUpdate({ _id: messageId, sender: senderId }, {
           isDeleted: true,
           deletedAt: new Date(),
           content: null,
           fileUrl: null,
         });
+        if (!deletedMessage) return;
+      } else {
+        await Message.findByIdAndUpdate(messageId, {
+          $addToSet: { deletedFor: senderId },
+        });
+        return;
       }
 
-      const deleteData = { messageId, deleteForEveryone };
+      const deleteData = { messageId, deleteForEveryone: true };
 
       if (groupId) {
         const group = await Group.findById(groupId).populate("members.user", "_id");
@@ -562,7 +573,9 @@ const setupSocket = (server) => {
     socket.on("markMessagesSeen", markMessagesSeen);
     socket.on("messageReaction", handleReaction);
     socket.on("editMessage", handleEditMessage);
-    socket.on("deleteMessage", handleDeleteMessage);
+    socket.on("deleteMessage", (data) =>
+      handleDeleteMessage({ ...data, senderId: userId })
+    );
 
     // Friend events
     socket.on("sendFriendRequest", sendFriendRequest);

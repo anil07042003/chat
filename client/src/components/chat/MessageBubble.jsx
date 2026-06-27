@@ -111,9 +111,8 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
       groupId: selectedChatType === "group" ? selectedChatData._id : undefined,
     });
 
-    if (deleteForEveryone) {
-      removeMessage(message._id);
-    }
+    // Both delete modes remove the bubble for the current user immediately.
+    removeMessage(message._id);
     setShowMenu(false);
   };
 
@@ -440,11 +439,11 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
         <div className="relative">
           {/* Hover actions — hidden on touch/small screens, shown on hover for pointer devices */}
           <div
-            className={`absolute top-1/2 -translate-y-1/2 ${isMine ? "-left-14 sm:-left-16" : "-right-14 sm:-right-16"} opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10 pointer-events-none group-hover:pointer-events-auto hidden sm:flex`}
+            className={`absolute top-1/2 -translate-y-1/2 ${isMine ? "-left-10 sm:-left-16" : "-right-10 sm:-right-16"} flex gap-1 z-10 opacity-100 pointer-events-auto sm:opacity-0 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto transition-opacity`}
           >
             <button
               onClick={() => setShowReactions(!showReactions)}
-              className="p-1.5 rounded-lg bg-surface-800 hover:bg-surface-700 text-surface-400 hover:text-white transition-colors text-sm"
+              className="hidden sm:block p-1.5 rounded-lg bg-surface-800 hover:bg-surface-700 text-surface-400 hover:text-white transition-colors text-sm"
               title="React"
             >
               😊
@@ -505,16 +504,14 @@ const MessageBubble = ({ message, isMine, isGroup }) => {
                   <IoDownload size={14} /> Download
                 </button>
               )}
+              <div className="h-px bg-surface-700 my-1" />
+              <button onClick={() => handleDelete(false)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-rose-400 hover:bg-surface-700 transition-colors">
+                <IoTrash size={14} /> Delete for me
+              </button>
               {isMine && (
-                <>
-                  <div className="h-px bg-surface-700 my-1" />
-                  <button onClick={() => handleDelete(false)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-rose-400 hover:bg-surface-700 transition-colors">
-                    <IoTrash size={14} /> Delete for me
-                  </button>
                   <button onClick={() => handleDelete(true)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-rose-400 hover:bg-surface-700 transition-colors">
                     <IoTrash size={14} /> Delete for everyone
                   </button>
-                </>
               )}
             </div>
           )}

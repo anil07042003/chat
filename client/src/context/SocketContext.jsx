@@ -225,6 +225,27 @@ export const SocketProvider = ({ children }) => {
 
     // ── Group messages ─────────────────────────────────────────────────────
 
+    socket.on("groupMessageSent", ({ message }) => {
+      if (!message) return;
+
+      const {
+        selectedChatData,
+        selectedChatType,
+        addMessage,
+        sortGroupList,
+      } = useAppStore.getState();
+      const groupId = message.groupId?._id || message.groupId;
+
+      if (
+        selectedChatType === "group" &&
+        selectedChatData?._id?.toString() === groupId?.toString()
+      ) {
+        addMessage(message);
+      }
+
+      if (message.group) sortGroupList(message.group);
+    });
+
     socket.on("receiveGroupMessage", (message) => {
       const {
         selectedChatData,
