@@ -42,7 +42,14 @@ const SECTION_COMPONENTS = {
 
 const SettingsLayout = () => {
   const { userInfo, setUserInfo } = useAppStore();
-  const [activeSection, setActiveSection] = useState(null);
+  const [activeSection, setActiveSection] = useState(() => {
+    // Check if we should open to profile section
+    if (typeof window !== "undefined" && localStorage.getItem("openSettingsToProfile")) {
+      localStorage.removeItem("openSettingsToProfile");
+      return "profile";
+    }
+    return null;
+  });
   const [search, setSearch] = useState("");
 
   const selectSection = (id) => {

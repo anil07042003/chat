@@ -237,28 +237,29 @@ export const SocketProvider = ({ children }) => {
 
       const myId     = ui?.id;
       const senderId = message.sender?._id || message.sender;
+      const groupId  = message.groupId?._id || message.groupId;
 
       const isCurrentChat =
         selectedChatType === "group" &&
-        selectedChatData?._id === message.groupId?.toString();
+        selectedChatData?._id?.toString() === groupId?.toString();
 
       if (isCurrentChat) {
-        if (senderId !== myId) {
-          const autoDownload = ui?.chatSettings?.mediaAutoDownload !== false;
-          const isMedia = ["image","video","audio","voice","file"].includes(message.messageType);
-          if (isMedia && !autoDownload) {
-            addMessage({ ...message, pendingDownload: true });
-          } else {
-            addMessage(message);
-          }
+        const autoDownload = ui?.chatSettings?.mediaAutoDownload !== false;
+        const isMedia = ["image","video","audio","voice","file"].includes(message.messageType);
+        if (senderId !== myId && isMedia && !autoDownload) {
+          addMessage({ ...message, pendingDownload: true });
+        } else {
+          // Group messages are persisted before this event is emitted, so the
+          // sender should render the same server-confirmed message as everyone else.
+          addMessage(message);
         }
       } else if (senderId !== myId) {
-        incrementUnread(message.groupId);
+        incrementUnread(groupId);
 
         const n = ui?.notificationSettings || {};
         const muted = useAppStore
           .getState()
-          .groups.some((group) => group._id === message.groupId?.toString() && group.isMuted);
+          .groups.some((group) => group._id?.toString() === groupId?.toString() && group.isMuted);
         const groupNotifs    = n.groupNotifications  !== false;
         const soundEnabled   = n.soundEnabled         !== false;
         const vibEnabled     = n.vibrationEnabled     !== false;

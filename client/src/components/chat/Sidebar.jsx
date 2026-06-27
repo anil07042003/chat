@@ -54,6 +54,15 @@ const Sidebar = () => {
     setActivePanel(activePanel === id ? null : id);
   };
 
+  // Open settings to profile section
+  const handleAvatarClick = () => {
+    setActivePanel(activePanel === "settings" ? null : "settings");
+    // Store that we want to open profile section
+    if (activePanel !== "settings") {
+      localStorage.setItem("openSettingsToProfile", "true");
+    }
+  };
+
   return (
     <div
       className={`
@@ -134,7 +143,7 @@ const Sidebar = () => {
           }}
           size={isCompact ? "xs" : "sm"}
           showOnline
-          onClick={() => handleNavClick("settings")}
+          onClick={handleAvatarClick}
           className="cursor-pointer hover:ring-2 hover:ring-nexchat-500 rounded-full transition-all"
         />
       </div>

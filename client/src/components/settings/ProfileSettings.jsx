@@ -145,13 +145,13 @@ const ProfileSettings = () => {
       <SectionTitle>Avatar Color</SectionTitle>
       <SettingsCard>
         <div className="p-3">
-          {/* 5 per row on 320px — each swatch ~44px */}
-          <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
+          {/* Medium-sized color swatches */}
+          <div className="flex gap-3 flex-wrap">
             {AVATAR_COLORS.map((color, i) => (
               <button
                 key={i}
                 onClick={() => setForm((p) => ({ ...p, color: i }))}
-                className={`w-full aspect-square rounded-full ${color} transition-all duration-200 ${
+                className={`w-12 h-12 rounded-full ${color} transition-all duration-200 flex-shrink-0 ${
                   form.color === i ? "ring-2 ring-white ring-offset-2 ring-offset-surface-800 scale-110" : "hover:scale-105"
                 }`}
               />
